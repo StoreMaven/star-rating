@@ -57,37 +57,13 @@
 
 			// Load control parameters / find context / etc
 			var control, input = $(this);
-			var control_name = (this.name || options.name || 'unnamed-rating' +(options.stars?'-'+$.fn.rating.calls:'') ).replace(/\[|\]/g, '_').replace(/^\_+|\_+$/g,'');
+			var eid = (this.name || 'unnamed-rating').replace(/\[|\]/g, '_').replace(/^\_+|\_+$/g,'');
 			var context = $(this.form || document.body);
-
-			// issue #10 - https://github.com/fyneworks/star-rating/issues/10
-			if(!input.is('input')){
-				if(options.stars){
-					
-					// insert newly created form elements
-					input.html(Array(options.stars+1).join(
-						'<input type="radio" name="'+ control_name +'"/>'
-					));
-
-					return input.find('input').each(function(i){
-						// set element values.
-						// accepts an array in options.values
-						// or defaults to numbers from 1 to options.stars
-						$(this).val( options.values ? options.values[i] : i+1 )
-
-					})
-					.rating(options);
-				}
-				else{
-					throw "Invalid star rating plugin call";
-					return;
-				};
-			};
 
 			// FIX: http://code.google.com/p/jquery-star-rating-plugin/issues/detail?id=23
 			var raters = context.data('rating');
 			if(!raters || raters.call!=$.fn.rating.calls) raters = { count:0, call:$.fn.rating.calls };
-			var rater = raters[control_name] || context.data('rating'+control_name);
+			var rater = raters[eid] || context.data('rating'+eid);
 
 			// if rater is available, verify that the control still exists
 			if(rater) control = rater.data('rating');
@@ -126,7 +102,7 @@
 
 				// Create 'cancel' button
 				rater.append(
-					control.cancel = $('<div class="rating-cancel rater-cancel-' + control.serial + '"><a title="' + control.cancel + '">' + control.cancelValue + '</a></div>')
+					control.cancel = $('<div class="rating-cancel"><a title="' + control.cancel + '">' + control.cancelValue + '</a></div>')
 					.on('mouseover',function(){
 						$(this).rating('drain');
 						$(this).addClass('star-rating-hover');
@@ -152,11 +128,6 @@
 			// inherit attributes from input element
 			if(this.id) star.attr('id', this.id);
 			if(this.className) star.addClass(this.className);
-
-			// Google Code Suggestion 144 - https://code.google.com/p/jquery-star-rating-plugin/issues/detail?id=144
-			for (datum in $(this).data()) {
-				star.data(datum, $(this).data(datum));
-			};
 
 			// Half-stars?
 			if(control.half) control.split = 2;
@@ -219,14 +190,14 @@
 			// store control information in form (or body when form not available)
 			control.stars[control.stars.length] = star[0];
 			control.inputs[control.inputs.length] = input[0];
-			control.rater = raters[control_name] = rater;
+			control.rater = raters[eid] = rater;
 			control.context = context;
 
 			input.data('rating', control);
 			rater.data('rating', control);
 			star.data('rating', control);
 			context.data('rating', raters);
-			context.data('rating'+control_name, rater); // required for ajax forms
+			context.data('rating'+eid, rater); // required for ajax forms
 		}); // each element
 
 		// Initialize ratings (first draw)
@@ -306,9 +277,9 @@
 			control.current = null;
 			// programmatically (based on user input)
 			if(typeof value!='undefined' || this.length>1){
-				// select by index (0 based)
-				if(typeof value=='number')
-					return $(control.stars[value]).rating('select',undefined,wantCallBack);
+			// select by index (0 based)
+			if(typeof value=='number')
+				return $(control.stars[value]).rating('select',undefined,wantCallBack);
 				// select by literal value (must be passed as a string
 				if(typeof value=='string'){
 					//return
@@ -322,7 +293,7 @@
 			} else {
 				control.current = this[0].tagName=='INPUT' ?
 					this.data('rating.star') :
-					((this.is('.rater-'+ control.serial) || this.is('.rater-cancel-' + control.serial)) ? this : null);
+					(this.is('.rater-'+ control.serial) ? this : null);
 			}
 			// Update rating control state
 			this.data('rating', control);
